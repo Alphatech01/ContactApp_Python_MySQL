@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: contact_book_flask-main_db_1
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: userpassword
+      MYSQL_DATABASE: contactbook
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - contactbook_db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"  # Expose port 3307 on the host machine
+
+  app:
+    build: .
+    container_name: contact_book_flask-main_app_1
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: mysql://root:userpassword@db/contactbook  # Corrected database URL
+    ports:
+      - "5000:5000"
+    volumes:
+      - D:\DevOps\Project\Contact_book_Flask-main:/app
+      - /app/venv
+    depends_on:
+      - db
+    command: ["./wait-for-it.sh", "db:3306", "--timeout=120", "--strict", "--", "python", "app.py"]
+
+volumes:
+  contactbook_db_data:
+    driver: local
